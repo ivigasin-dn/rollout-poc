@@ -25,19 +25,3 @@ spec:
         env:
         - name: NAMESPACE
           value: "rollout-system"
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: rollout-webhook
-  namespace: rollout-system
-  labels:
-    app.kubernetes.io/name: rollout-webhook
-    app.kubernetes.io/part-of: rollout-poc
-spec:
-  selector:
-    app.kubernetes.io/name: rollout-controller
-  ports:
-  - port: 8080
-    targetPort: 8080
-    protocol: TCP
