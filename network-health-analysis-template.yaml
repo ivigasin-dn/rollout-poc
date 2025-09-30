@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: network-health-check
+  namespace: dap-rollouts
+spec:
+  metrics:
+  - name: config-commit-success
+    interval: 30s
+    count: 3
+    successCondition: result[0] >= 0.95
+    failureCondition: result[0] < 0.90
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          sum(rate(network_device_config_commit_success[5m])) / 
+          sum(rate(network_device_config_commit_total[5m]))
+  
+  - name: device-online-status
+    interval: 30s
+    count: 3
+    successCondition: result[0] >= 0.98
+    failureCondition: result[0] < 0.95
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          sum(network_device_online) / 
+          sum(network_device_total)
+  
+  - name: interface-flaps
+    interval: 30s
+    count: 3
+    successCondition: result[0] < 5
+    failureCondition: result[0] >= 10
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          sum(rate(network_interface_flaps[5m]))
+  
+  - name: cpu-memory-utilization
+    interval: 30s
+    count: 3
+    successCondition: result[0] < 0.80
+    failureCondition: result[0] >= 0.90
+    provider:
+      prometheus:
+        address: http://prometheus:9090
+        query: |
+          avg(network_device_cpu_usage) + avg(network_device_memory_usage)
+  
+  args:
+  - name: service-name
+    description: Name of the service being analyzed

@@ -1,0 +1,58 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: network-config-rollout
+  namespace: dap-rollouts
+spec:
+  replicas: 1
+  strategy:
+    canary:
+      steps:
+      - setWeight: 5
+        pause:
+          duration: 60m
+      - setWeight: 20
+        pause:
+          duration: 60m
+      - setWeight: 50
+        pause:
+          duration: 60m
+      - setWeight: 100
+      analysis:
+        templates:
+        - templateName: network-health-check
+          args:
+          - name: service-name
+            value: network-device-service
+  
+  selector:
+    matchLabels:
+      app: network-config
+  
+  template:
+    metadata:
+      labels:
+        app: network-config
+    spec:
+      containers:
+      - name: network-config-deployment
+        image: dap/network-config:latest
+        env:
+        - name: ROLLOUT_ID
+          value: "rollout-123"
+        - name: TEMPLATE_IDS
+          value: "template-1,template-2"
+        - name: DEVICE_COHORT
+          value: "production-routers"
+        - name: STAGE
+          value: "canary"
+        ports:
+        - containerPort: 8080
+          name: http
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
