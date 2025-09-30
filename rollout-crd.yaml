@@ -63,7 +63,7 @@ spec:
                 properties:
                   metadata:
                     type: object
-                        description: "sddssdfs"
+                    description: "sddssdfs"
                     properties:
                       annotations:
                         type: object
