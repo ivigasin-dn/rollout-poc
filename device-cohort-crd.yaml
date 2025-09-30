@@ -1,0 +1,140 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: devicecohorts.dap.io
+  labels:
+    app.kubernetes.io/name: dap-rollout
+    app.kubernetes.io/part-of: dap-rollout
+spec:
+  group: dap.io
+  names:
+    kind: DeviceCohort
+    listKind: DeviceCohortList
+    plural: devicecohorts
+    singular: devicecohort
+    shortNames:
+    - dc
+    - devicecohorts
+  scope: Namespaced
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            properties:
+              devices:
+                type: array
+                description: List of devices in this cohort
+                items:
+                  type: object
+                  properties:
+                    deviceId:
+                      type: string
+                      description: Unique identifier for the device
+                    deviceType:
+                      type: string
+                      description: Type of device (e.g., router, switch)
+                      enum: ["router", "switch", "firewall", "load-balancer"]
+                    site:
+                      type: string
+                      description: Site or location where device is located
+                    status:
+                      type: string
+                      description: Current status of the device
+                      enum: ["online", "offline", "maintenance", "unknown"]
+                      default: "unknown"
+              stages:
+                type: object
+                description: Rollout stages configuration
+                properties:
+                  canary:
+                    type: array
+                    description: Devices for canary stage (~5%)
+                    items:
+                      type: string
+                      description: Device ID
+                  early:
+                    type: array
+                    description: Devices for early stage (~20%)
+                    items:
+                      type: string
+                      description: Device ID
+                  broad:
+                    type: array
+                    description: Devices for broad stage (~50%)
+                    items:
+                      type: string
+                      description: Device ID
+                  full:
+                    type: array
+                    description: Devices for full stage (100%)
+                    items:
+                      type: string
+                      description: Device ID
+              filters:
+                type: object
+                description: Device selection filters
+                properties:
+                  deviceTypes:
+                    type: array
+                    description: Filter by device types
+                    items:
+                      type: string
+                      enum: ["router", "switch", "firewall", "load-balancer"]
+                  sites:
+                    type: array
+                    description: Filter by sites
+                    items:
+                      type: string
+                  status:
+                    type: array
+                    description: Filter by device status
+                    items:
+                      type: string
+                      enum: ["online", "offline", "maintenance", "unknown"]
+              metadata:
+                type: object
+                description: Additional metadata for the cohort
+                properties:
+                  description:
+                    type: string
+                    description: Human-readable description of the cohort
+                  tags:
+                    type: array
+                    description: Tags for categorization
+                    items:
+                      type: string
+          status:
+            type: object
+            properties:
+              observedGeneration:
+                type: string
+                description: ObservedGeneration indicates the .metadata.generation that the controller observed
+              phase:
+                type: string
+                description: Current phase of the device cohort
+                enum: ["Pending", "Ready", "Failed"]
+              message:
+                type: string
+                description: Human-readable message about the current status
+              deviceCount:
+                type: integer
+                format: int32
+                description: Total number of devices in the cohort
+              onlineDevices:
+                type: integer
+                format: int32
+                description: Number of online devices
+              offlineDevices:
+                type: integer
+                format: int32
+                description: Number of offline devices
+              lastUpdated:
+                type: string
+                format: date-time
+                description: Last time the status was updated
