@@ -12,6 +12,8 @@ spec:
     repoURL: https://github.com/your-org/rollout-poc
     targetRevision: HEAD
     path: .
+    directory:
+      exclude: "*.json"
   destination:
     server: https://kubernetes.default.svc
     namespace: rollout-system
@@ -39,6 +41,8 @@ spec:
     repoURL: https://github.com/your-org/rollout-poc
     targetRevision: HEAD
     path: .
+    directory:
+      exclude: "*.json"
   destination:
     server: https://kubernetes.default.svc
     namespace: rollout-apps
@@ -75,7 +79,7 @@ spec:
     kind: 'AppProject'
   namespaceResourceWhitelist:
   - group: 'rollout.io'
-    kind: 'ConfigRollout'
+    kind: 'NetworkRollout'
   - group: 'rollout.io'
     kind: 'AnalysisTemplate'
   - group: ''
