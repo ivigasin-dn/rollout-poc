@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dap-rollouts
+  labels:
+    app.kubernetes.io/name: dap-rollout
+    app.kubernetes.io/part-of: dap-rollout
+    name: dap-rollouts
