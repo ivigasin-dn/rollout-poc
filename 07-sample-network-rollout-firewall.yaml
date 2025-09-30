@@ -1,0 +1,35 @@
+apiVersion: rollout.io/v1alpha1
+kind: NetworkRollout
+metadata:
+  name: firewall-config-rollout
+  namespace: rollout-apps
+  labels:
+    app.kubernetes.io/name: network-rollout
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  config:
+    name: "firewall-security-config"
+    version: "v1.5.0"
+    gitRepository:
+      url: "https://github.com/ivigasin-dn/network-configs"
+      branch: "main"
+      path: "configs/firewall-config-v1.5.0.json"
+  targetDevices:
+    - id: "firewall-001"
+      apiEndpoint: "https://firewall-001.company.com/api/v1/config"
+      authToken: "token-firewall-001"
+    - id: "firewall-002"
+      apiEndpoint: "https://firewall-002.company.com/api/v1/config"
+      authToken: "token-firewall-002"
+    - id: "firewall-003"
+      apiEndpoint: "https://firewall-003.company.com/api/v1/config"
+      authToken: "token-firewall-003"
+  canarySteps:
+    - percentage: 33
+      pauseDuration: "45s"
+      validationEndpoint: "https://validation.company.com/api/v1/validate"
+    - percentage: 66
+      pauseDuration: "60s"
+      validationEndpoint: "https://validation.company.com/api/v1/validate"
+    - percentage: 100
+      pauseDuration: "0s"

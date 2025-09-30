@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+"""
+Canary Rollout Controller for Network Devices
+Performs HTTP API calls to network devices in a canary fashion
+"""
+
+import json
+import time
+import random
+import requests
+import threading
+import logging
+from http.server import HTTPServer, BaseHTTPRequestHandler
+from datetime import datetime
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+class CanaryController(BaseHTTPRequestHandler):
+    def do_GET(self):
+        """Handle GET requests"""
+        if self.path == '/health':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = {"status": "healthy", "service": "canary-controller", "timestamp": datetime.now().isoformat()}
+            self.wfile.write(json.dumps(response).encode())
+            
+        elif self.path == '/metrics':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            metrics = {
+                "active_rollouts": len(self.server.active_rollouts),
+                "total_devices_configured": sum(len(r.get('completed_devices', [])) for r in self.server.active_rollouts.values()),
+                "total_devices_failed": sum(len(r.get('failed_devices', [])) for r in self.server.active_rollouts.values()),
+                "uptime_seconds": int(time.time() - self.server.start_time)
+            }
+            self.wfile.write(json.dumps(metrics).encode())
+            
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def do_POST(self):
+        """Handle POST requests"""
+        if self.path == '/start-rollout':
+            self.handle_start_rollout()
+        elif self.path == '/rollout-status':
+            self.handle_rollout_status()
+        elif self.path == '/validate-device':
+            self.handle_validate_device()
+        else:
+            self.send_response(404)
+            self.end_headers()
+    
+    def handle_start_rollout(self):
+        """Start a canary rollout"""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            rollout_id = data.get('rolloutId', f"rollout-{int(time.time())}")
+            config = data.get('config', {})
+            target_devices = data.get('targetDevices', [])
+            canary_steps = data.get('canarySteps', [])
+            
+            logger.info(f"🚀 Starting canary rollout {rollout_id} with {len(target_devices)} devices")
+            
+            # Start rollout in background thread
+            rollout_thread = threading.Thread(
+                target=self.execute_canary_rollout,
+                args=(rollout_id, config, target_devices, canary_steps)
+            )
+            rollout_thread.daemon = True
+            rollout_thread.start()
+            
+            # Initialize rollout status
+            self.server.active_rollouts[rollout_id] = {
+                'phase': 'Progressing',
+                'current_step': 0,
+                'completed_devices': [],
+                'failed_devices': [],
+                'start_time': datetime.now().isoformat(),
+                'config': config,
+                'target_devices': target_devices,
+                'canary_steps': canary_steps
+            }
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = {
+                "status": "success",
+                "message": f"Canary rollout {rollout_id} started",
+                "rolloutId": rollout_id,
+                "totalDevices": len(target_devices)
+            }
+            self.wfile.write(json.dumps(response).encode())
+            
+        except Exception as e:
+            logger.error(f"Failed to start rollout: {str(e)}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = {"status": "error", "message": str(e)}
+            self.wfile.write(json.dumps(response).encode())
+    
+    def handle_rollout_status(self):
+        """Get rollout status"""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            rollout_id = data.get('rolloutId', '')
+            
+            if rollout_id not in self.server.active_rollouts:
+                self.send_response(404)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                response = {"status": "error", "message": f"Rollout {rollout_id} not found"}
+                self.wfile.write(json.dumps(response).encode())
+                return
+            
+            rollout = self.server.active_rollouts[rollout_id]
+            
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(rollout).encode())
+            
+        except Exception as e:
+            logger.error(f"Failed to get rollout status: {str(e)}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = {"status": "error", "message": str(e)}
+            self.wfile.write(json.dumps(response).encode())
+    
+    def handle_validate_device(self):
+        """Validate device configuration"""
+        try:
+            content_length = int(self.headers['Content-Length'])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data.decode('utf-8'))
+            
+            device_id = data.get('deviceId', 'unknown')
+            api_endpoint = data.get('apiEndpoint', '')
+            validation_endpoint = data.get('validationEndpoint', '')
+            
+            logger.info(f"🔍 Validating device {device_id} at {validation_endpoint}")
+            
+            # Simulate device validation
+            success = self.validate_device_config(device_id, api_endpoint, validation_endpoint)
+            
+            if success:
+                self.send_response(200)
+                response = {
+                    "status": "success",
+                    "message": f"Device {device_id} validation passed",
+                    "deviceId": device_id
+                }
+            else:
+                self.send_response(400)
+                response = {
+                    "status": "failure",
+                    "message": f"Device {device_id} validation failed",
+                    "deviceId": device_id
+                }
+            
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode())
+            
+        except Exception as e:
+            logger.error(f"Device validation error: {str(e)}")
+            self.send_response(500)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            response = {"status": "error", "message": str(e)}
+            self.wfile.write(json.dumps(response).encode())
+    
+    def execute_canary_rollout(self, rollout_id, config, target_devices, canary_steps):
+        """Execute canary rollout steps"""
+        try:
+            rollout = self.server.active_rollouts[rollout_id]
+            
+            for step_index, step in enumerate(canary_steps):
+                logger.info(f"📊 Executing step {step_index + 1}: {step['percentage']}% of devices")
+                
+                # Calculate number of devices for this step
+                total_devices = len(target_devices)
+                devices_for_step = int((step['percentage'] / 100) * total_devices)
+                
+                # Get devices that haven't been processed yet
+                remaining_devices = [d for d in target_devices if d['id'] not in rollout['completed_devices'] and d['id'] not in rollout['failed_devices']]
+                devices_to_process = remaining_devices[:devices_for_step]
+                
+                rollout['current_step'] = step_index + 1
+                
+                # Process devices in this step
+                for device in devices_to_process:
+                    success = self.deploy_config_to_device(device, config)
+                    
+                    if success:
+                        rollout['completed_devices'].append(device['id'])
+                        logger.info(f"✅ Config deployed to device {device['id']}")
+                    else:
+                        rollout['failed_devices'].append(device['id'])
+                        logger.error(f"❌ Failed to deploy config to device {device['id']}")
+                
+                # Validate step if validation endpoint provided
+                if step.get('validationEndpoint'):
+                    validation_success = self.validate_step(rollout_id, step['validationEndpoint'])
+                    if not validation_success:
+                        logger.warning(f"⚠️ Step {step_index + 1} validation failed")
+                        rollout['phase'] = 'Failed'
+                        return
+                
+                # Pause between steps
+                if step.get('pauseDuration') and step['pauseDuration'] != '0s':
+                    pause_seconds = self.parse_duration(step['pauseDuration'])
+                    logger.info(f"⏸️ Pausing for {step['pauseDuration']}")
+                    time.sleep(pause_seconds)
+            
+            # Mark rollout as completed
+            rollout['phase'] = 'Completed'
+            logger.info(f"🎉 Canary rollout {rollout_id} completed successfully")
+            
+        except Exception as e:
+            logger.error(f"Rollout execution error: {str(e)}")
+            if rollout_id in self.server.active_rollouts:
+                self.server.active_rollouts[rollout_id]['phase'] = 'Failed'
+                self.server.active_rollouts[rollout_id]['message'] = str(e)
+    
+    def deploy_config_to_device(self, device, config):
+        """Deploy configuration to a network device via HTTP API"""
+        try:
+            device_id = device['id']
+            api_endpoint = device['apiEndpoint']
+            
+            logger.info(f"📡 Deploying config to device {device_id} at {api_endpoint}")
+            
+            # Prepare HTTP request
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f"Bearer {device.get('authToken', 'dummy-token')}"
+            }
+            
+            payload = {
+                'config': config,
+                'timestamp': datetime.now().isoformat(),
+                'deviceId': device_id
+            }
+            
+            # Simulate HTTP request to device
+            # In real implementation, this would be:
+            # response = requests.post(api_endpoint, json=payload, headers=headers, timeout=30)
+            # return response.status_code == 200
+            
+            # For demo purposes, simulate network delay and success/failure
+            time.sleep(random.uniform(1, 3))  # Simulate network delay
+            
+            # 95% success rate for demo
+            success = random.random() < 0.95
+            
+            if success:
+                logger.info(f"✅ Successfully deployed config to {device_id}")
+            else:
+                logger.error(f"❌ Failed to deploy config to {device_id}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Device deployment error for {device_id}: {str(e)}")
+            return False
+    
+    def validate_device_config(self, device_id, api_endpoint, validation_endpoint):
+        """Validate device configuration"""
+        try:
+            # Simulate validation request
+            time.sleep(1)  # Simulate processing time
+            
+            # 90% success rate for demo
+            return random.random() < 0.9
+            
+        except Exception as e:
+            logger.error(f"Validation error for {device_id}: {str(e)}")
+            return False
+    
+    def validate_step(self, rollout_id, validation_endpoint):
+        """Validate entire step"""
+        try:
+            # Simulate step validation
+            time.sleep(2)  # Simulate processing time
+            
+            # 85% success rate for demo
+            return random.random() < 0.85
+            
+        except Exception as e:
+            logger.error(f"Step validation error: {str(e)}")
+            return False
+    
+    def parse_duration(self, duration_str):
+        """Parse duration string to seconds"""
+        if duration_str.endswith('s'):
+            return int(duration_str[:-1])
+        elif duration_str.endswith('m'):
+            return int(duration_str[:-1]) * 60
+        elif duration_str.endswith('h'):
+            return int(duration_str[:-1]) * 3600
+        else:
+            return 30  # Default 30 seconds
+    
+    def log_message(self, format, *args):
+        """Suppress default logging"""
+        pass
+
+class CanaryServer(HTTPServer):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.active_rollouts = {}
+        self.start_time = time.time()
+
+def run_server():
+    """Start the canary controller server"""
+    server = CanaryServer(('0.0.0.0', 8080), CanaryController)
+    logger.info("🚀 Canary Controller running on port 8080")
+    logger.info("📡 Available endpoints:")
+    logger.info("   GET  /health - Health check")
+    logger.info("   GET  /metrics - System metrics")
+    logger.info("   POST /start-rollout - Start canary rollout")
+    logger.info("   POST /rollout-status - Get rollout status")
+    logger.info("   POST /validate-device - Validate device config")
+    server.serve_forever()
+
+if __name__ == '__main__':
+    run_server()

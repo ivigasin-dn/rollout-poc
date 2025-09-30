@@ -1,0 +1,71 @@
+{
+  "name": "router-network-config",
+  "version": "v2.1.0",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "interfaces": [
+    {
+      "name": "eth0",
+      "ip": "192.168.1.1/24",
+      "status": "up",
+      "description": "Management interface"
+    },
+    {
+      "name": "eth1", 
+      "ip": "10.0.0.1/24",
+      "status": "up",
+      "description": "Data interface"
+    }
+  ],
+  "routing": [
+    {
+      "destination": "0.0.0.0/0",
+      "gateway": "192.168.1.254",
+      "interface": "eth0",
+      "metric": 1
+    },
+    {
+      "destination": "10.0.0.0/8",
+      "gateway": "10.0.0.254",
+      "interface": "eth1",
+      "metric": 2
+    }
+  ],
+  "services": [
+    {
+      "name": "ssh",
+      "port": 22,
+      "enabled": true,
+      "protocol": "tcp"
+    },
+    {
+      "name": "snmp",
+      "port": 161,
+      "enabled": true,
+      "protocol": "udp"
+    },
+    {
+      "name": "http",
+      "port": 80,
+      "enabled": false,
+      "protocol": "tcp"
+    }
+  ],
+  "firewall": {
+    "rules": [
+      {
+        "name": "allow-ssh",
+        "action": "allow",
+        "protocol": "tcp",
+        "port": 22,
+        "source": "192.168.0.0/16"
+      },
+      {
+        "name": "allow-snmp",
+        "action": "allow", 
+        "protocol": "udp",
+        "port": 161,
+        "source": "10.0.0.0/8"
+      }
+    ]
+  }
+}

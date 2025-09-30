@@ -1,0 +1,119 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: networkrollouts.rollout.io
+  labels:
+    app.kubernetes.io/name: network-rollout
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  group: rollout.io
+  names:
+    kind: NetworkRollout
+    listKind: NetworkRolloutList
+    plural: networkrollouts
+    singular: networkrollout
+    shortNames:
+      - nr
+  scope: Namespaced
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - config
+                - targetDevices
+                - canarySteps
+              properties:
+                config:
+                  type: object
+                  description: "Configuration to deploy to network devices"
+                  properties:
+                    name:
+                      type: string
+                      description: "Configuration name"
+                    version:
+                      type: string
+                      description: "Configuration version"
+                    gitRepository:
+                      type: object
+                      description: "Git repository configuration"
+                      properties:
+                        url:
+                          type: string
+                          description: "Git repository URL"
+                        branch:
+                          type: string
+                          description: "Git branch"
+                          default: "main"
+                        path:
+                          type: string
+                          description: "Path to configuration file in repo"
+                        authToken:
+                          type: string
+                          description: "Git authentication token (optional for public repos)"
+                    payload:
+                      type: object
+                      description: "Configuration payload (used if gitRepository not specified)"
+                      additionalProperties: true
+                targetDevices:
+                  type: array
+                  description: "List of target network devices"
+                  items:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: "Device ID"
+                      apiEndpoint:
+                        type: string
+                        description: "Device HTTP API endpoint"
+                      authToken:
+                        type: string
+                        description: "Authentication token"
+                canarySteps:
+                  type: array
+                  description: "Canary rollout steps"
+                  items:
+                    type: object
+                    properties:
+                      percentage:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: "Percentage of devices to update"
+                      pauseDuration:
+                        type: string
+                        description: "Duration to pause between steps"
+                        default: "30s"
+                      validationEndpoint:
+                        type: string
+                        description: "HTTP endpoint for validation"
+            status:
+              type: object
+              properties:
+                phase:
+                  type: string
+                  enum: ["Pending", "Progressing", "Paused", "Completed", "Failed"]
+                  description: "Current phase"
+                message:
+                  type: string
+                  description: "Status message"
+                currentStep:
+                  type: integer
+                  description: "Current step number"
+                completedDevices:
+                  type: array
+                  items:
+                    type: string
+                  description: "List of devices that completed rollout"
+                failedDevices:
+                  type: array
+                  items:
+                    type: string
+                  description: "List of devices that failed rollout"

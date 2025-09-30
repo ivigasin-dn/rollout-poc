@@ -7,6 +7,19 @@ metadata:
     app.kubernetes.io/name: analysis-template
     app.kubernetes.io/part-of: rollout-poc
 spec:
-  validationUrl: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/validate"
+  validationUrl: "http://rollout-controller.rollout-system.svc.cluster.local:8080/validate"
   timeout: "30s"
+  successCondition: "result.status == 'success'"
+---
+apiVersion: rollout.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: config-deployment-template
+  namespace: rollout-system
+  labels:
+    app.kubernetes.io/name: analysis-template
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  validationUrl: "http://rollout-controller.rollout-system.svc.cluster.local:8080/send-config"
+  timeout: "60s"
   successCondition: "result.status == 'success'"

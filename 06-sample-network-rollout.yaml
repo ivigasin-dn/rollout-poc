@@ -1,0 +1,41 @@
+apiVersion: rollout.io/v1alpha1
+kind: NetworkRollout
+metadata:
+  name: router-config-rollout
+  namespace: rollout-apps
+  labels:
+    app.kubernetes.io/name: network-rollout
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  config:
+    name: "router-network-config"
+    version: "v2.1.0"
+    gitRepository:
+      url: "https://github.com/ivigasin-dn/network-configs"
+      branch: "main"
+      path: "configs/router-config-v2.1.0.json"
+  targetDevices:
+    - id: "router-001"
+      apiEndpoint: "https://router-001.company.com/api/v1/config"
+      authToken: "token-router-001"
+    - id: "router-002"
+      apiEndpoint: "https://router-002.company.com/api/v1/config"
+      authToken: "token-router-002"
+    - id: "router-003"
+      apiEndpoint: "https://router-003.company.com/api/v1/config"
+      authToken: "token-router-003"
+    - id: "router-004"
+      apiEndpoint: "https://router-004.company.com/api/v1/config"
+      authToken: "token-router-004"
+    - id: "router-005"
+      apiEndpoint: "https://router-005.company.com/api/v1/config"
+      authToken: "token-router-005"
+  canarySteps:
+    - percentage: 20
+      pauseDuration: "30s"
+      validationEndpoint: "https://validation.company.com/api/v1/validate"
+    - percentage: 50
+      pauseDuration: "60s"
+      validationEndpoint: "https://validation.company.com/api/v1/validate"
+    - percentage: 100
+      pauseDuration: "0s"

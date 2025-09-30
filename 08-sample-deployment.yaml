@@ -1,27 +1,35 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: rollout-controller
+  name: canary-controller
   namespace: rollout-system
   labels:
-    app.kubernetes.io/name: rollout-controller
+    app.kubernetes.io/name: canary-controller
     app.kubernetes.io/part-of: rollout-poc
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: rollout-controller
+      app.kubernetes.io/name: canary-controller
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: rollout-controller
+        app.kubernetes.io/name: canary-controller
     spec:
       containers:
       - name: controller
-        image: golang:alpine
-        command: ["sleep", "infinity"]
+        image: python:alpine
+        command: ["sh", "-c", "apk add --no-cache git && python /controller.py"]
         ports:
         - containerPort: 8080
         env:
         - name: NAMESPACE
           value: "rollout-system"
+        volumeMounts:
+        - name: controller-script
+          mountPath: /controller.py
+          subPath: canary-controller.py
+      volumes:
+      - name: controller-script
+        configMap:
+          name: canary-controller-script

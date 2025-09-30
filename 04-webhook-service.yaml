@@ -1,74 +1,16 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: rollout-webhook
+  name: canary-controller
   namespace: rollout-system
   labels:
-    app.kubernetes.io/name: rollout-webhook
+    app.kubernetes.io/name: canary-controller
     app.kubernetes.io/part-of: rollout-poc
 spec:
   selector:
-    app: rollout-webhook
+    app.kubernetes.io/name: canary-controller
   ports:
     - port: 8080
       targetPort: 8080
       name: http
   type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: rollout-webhook
-  namespace: rollout-system
-  labels:
-    app.kubernetes.io/name: rollout-webhook
-    app.kubernetes.io/part-of: rollout-poc
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: rollout-webhook
-  template:
-    metadata:
-      labels:
-        app: rollout-webhook
-    spec:
-      containers:
-      - name: webhook
-        image: nginx:alpine
-        ports:
-        - containerPort: 8080
-        volumeMounts:
-        - name: webhook-config
-          mountPath: /etc/nginx/conf.d
-      volumes:
-      - name: webhook-config
-        configMap:
-          name: webhook-config
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: webhook-config
-  namespace: rollout-system
-data:
-  default.conf: |
-    server {
-        listen 8080;
-        server_name localhost;
-        
-        location /health {
-            return 200 '{"status":"healthy"}';
-            add_header Content-Type application/json;
-        }
-        
-        location /validate {
-            return 200 '{"status":"success","message":"Configuration validation passed"}';
-            add_header Content-Type application/json;
-        }
-        
-        location /metrics {
-            return 200 '{"cpu_usage":50,"memory_usage":60,"response_time":200,"error_rate":0.5,"throughput":3000}';
-            add_header Content-Type application/json;
-        }
-    }
