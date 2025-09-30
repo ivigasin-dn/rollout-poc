@@ -15,6 +15,12 @@ spec:
         pause:
           duration: 30s
       - setWeight: 100
+      analysis:
+        templates:
+        - templateName: network-health-check
+          args:
+          - name: service-name
+            value: network-device-service
   
   selector:
     matchLabels:
