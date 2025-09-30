@@ -8,22 +8,13 @@ spec:
   strategy:
     canary:
       steps:
-      - setWeight: 5
-        pause:
-          duration: 60m
       - setWeight: 20
         pause:
-          duration: 60m
+          duration: 30s
       - setWeight: 50
         pause:
-          duration: 60m
+          duration: 30s
       - setWeight: 100
-      analysis:
-        templates:
-        - templateName: network-health-check
-          args:
-          - name: service-name
-            value: network-device-service
   
   selector:
     matchLabels:
@@ -46,9 +37,6 @@ spec:
           value: "production-routers"
         - name: STAGE
           value: "canary"
-        ports:
-        - containerPort: 8080
-          name: http
         resources:
           requests:
             memory: "64Mi"
