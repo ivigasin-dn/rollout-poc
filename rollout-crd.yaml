@@ -13,551 +13,205 @@ spec:
     plural: rollouts
     singular: rollout
     shortNames:
-    - ro
-    - rollouts
+      - ro
+      - rollouts
   scope: Namespaced
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
-    schema:
-      openAPIV3Schema:
-        type: object
-        properties:
-          spec:
-            type: object
-            properties:
-              replicas:
-                type: integer
-                format: int32
-                description: Number of desired pods. This is a pointer to distinguish between explicit zero and not specified. Defaults to 1.
-              selector:
-                type: object
-                description: Label selector for pods. Existing ReplicaSets whose pods are selected by this will be the ones affected by this rollout.
-                properties:
-                  matchExpressions:
-                    type: array
-                    description: matchExpressions is a list of label selector requirements. The requirements are ANDed.
-                    items:
-                      type: object
-                      properties:
-                        key:
-                          type: string
-                          description: key is the label key that the selector applies to.
-                        operator:
-                          type: string
-                          description: operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist.
-                        values:
-                          type: array
-                          description: values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch.
-                          items:
-                            type: string
-                  matchLabels:
-                    type: object
-                    additionalProperties:
-                      type: string
-                    description: matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is "key", the operator is "In", and the values array contains only "value". The requirements are ANDed.
-              template:
-                type: object
-                description: Template describes the pods that will be created.
-                properties:
-                  metadata:
-                    type: object
-                    description: "sddssdfs"
-                    properties:
-                      annotations:
-                        type: object
-                        additionalProperties:
-                          type: string
-                            description: Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata. They are not queried by any server-side components and should be preserved when modifying objects. More info: http://kubernetes.io/docs/user-guide/annotations
-                      labels:
-                        type: object
-                        additionalProperties:
-                          type: string
-                        description: "Map of string keys and values that can be used to organize and categorize (scope and select) objects. May match selectors of replication controllers and services. More info: http://kubernetes.io/docs/user-guide/labels"
-                      name:
-                        type: string
-                        description: "Name must be unique within a namespace. Is required when creating resources, although some resources may allow a client to request the generation of an appropriate name automatically. Name is primarily intended for creation idempotence and configuration definition. Cannot be updated. More info: http://kubernetes.io/docs/user-guide/identifiers#names"
-                      namespace:
-                        type: string
-                        description: "Namespace defines the space within which each name must be unique. An empty namespace is equivalent to the \"default\" namespace, but \"default\" is the canonical representation. Not all objects are required to be scoped to a namespace - the value of this field for those objects will be empty. Must be a DNS_LABEL. Cannot be updated. More info: http://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/"
-                  spec:
-                    type: object
-                    description: "Specification of the desired behavior of the pod. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status"
-                    properties:
-                      containers:
-                        type: array
-                        description: List of containers belonging to the pod. Containers cannot currently be added or removed. There must be at least one container in a Pod. Cannot be updated.
-                        items:
-                          type: object
-                          properties:
-                            name:
-                              type: string
-                              description: Name of the container specified as a DNS_LABEL. Each container in a pod must have a unique name. Cannot be updated.
-                            image:
-                              type: string
-                              description: "Docker image name. More info: https://kubernetes.io/docs/concepts/containers/images This field is optional to allow higher level config management to default or override the image tag for the container."
-                            env:
-                              type: array
-                              description: List of environment variables to set in the container. Cannot be updated.
-                              items:
-                                type: object
-                                properties:
-                                  name:
-                                    type: string
-                                    description: Name of the environment variable. Must be a C_IDENTIFIER.
-                                  value:
-                                    type: string
-                                    description: Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any service environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "".
-                                  valueFrom:
-                                    type: object
-                                    description: Source for the environment variable's value. Cannot be used if value is not empty.
-                                    properties:
-                                      configMapKeyRef:
-                                        type: object
-                                        description: Selects a key from a ConfigMap.
-                                        properties:
-                                          key:
-                                            type: string
-                                            description: The key to select.
-                                          name:
-                                            type: string
-                                            description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-                                          optional:
-                                            type: boolean
-                                            description: Specify whether the ConfigMap or its key must be defined
-                                      fieldRef:
-                                        type: object
-                                        description: Selects a field of the pod: supports metadata.name, metadata.namespace, metadata.labels, metadata.annotations, spec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.
-                                        properties:
-                                          apiVersion:
-                                            type: string
-                                            description: Version of the schema the FieldPath is written in terms of, defaults to "v1".
-                                          fieldPath:
-                                            type: string
-                                            description: Path of the field to select in the specified API version.
-                                      resourceFieldRef:
-                                        type: object
-                                        description: Selects a resource of the container: only resources limits and requests (limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.
-                                        properties:
-                                          containerName:
-                                            type: string
-                                            description: Container name: required for volumes, optional for env vars
-                                          divisor:
-                                            type: string
-                                            description: Specifies the output format of the exposed resources, defaults to "1"
-                                          resource:
-                                            type: string
-                                            description: Required: resource to select
-                                      secretKeyRef:
-                                        type: object
-                                        description: Selects a key from a Secret.
-                                        properties:
-                                          key:
-                                            type: string
-                                            description: The key of the secret to select from. Must be a valid secret key.
-                                          name:
-                                            type: string
-                                            description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-                                          optional:
-                                            type: boolean
-                                            description: Specify whether the Secret or its key must be defined
-                            ports:
-                              type: array
-                              description: List of ports to expose from the container. Exposing a port here gives the system additional information about the network connections a container uses, but is primarily informational. Not specifying a port here DOES NOT prevent that port from being exposed. Any port which is listening on the default "0.0.0.0" address inside a container will be accessible from the network. Cannot be updated.
-                              items:
-                                type: object
-                                properties:
-                                  containerPort:
-                                    type: integer
-                                    format: int32
-                                    description: Number of port to expose on the pod's IP address. This must be a valid port number, 0 < x < 65536.
-                                  hostIP:
-                                    type: string
-                                    description: What host IP to bind the external port to.
-                                  hostPort:
-                                    type: integer
-                                    format: int32
-                                    description: Number of port to expose on the host. If specified, this must be a valid port number, 0 < x < 65536. If HostNetwork is specified, this must match ContainerPort. Most containers do not need this.
-                                  name:
-                                    type: string
-                                    description: If specified, this must be an IANA_SVC_NAME and unique within the pod. Each named port in a pod must have a unique name. Name for the port that can be referred to by services.
-                                  protocol:
-                                    type: string
-                                    description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults to "TCP".
-                                    default: TCP
-                            resources:
-                              type: object
-                              description: "Compute Resources required by this container. Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-                              properties:
-                                limits:
-                                  type: object
-                                  additionalProperties:
-                                    type: string
-                                  description: "Limits describes the maximum amount of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-                                requests:
-                                  type: object
-                                  additionalProperties:
-                                    type: string
-                                  description: "Requests describes the minimum amount of compute resources required. If Requests is omitted for a container, it defaults to Limits if that is explicitly specified, otherwise to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/"
-                            volumeMounts:
-                              type: array
-                              description: Pod volumes to mount into the container's filesystem. Cannot be updated.
-                              items:
-                                type: object
-                                properties:
-                                  mountPath:
-                                    type: string
-                                    description: Path within the container at which the volume should be mounted. Must not contain ':'.
-                                  mountPropagation:
-                                    type: string
-                                    description: mountPropagation determines how mounts are propagated from the host to container and the other way around. When not set, MountPropagationNone is used. This field is beta in 1.10.
-                                  name:
-                                    type: string
-                                    description: This must match the Name of a Volume.
-                                  readOnly:
-                                    type: boolean
-                                    description: Mounted read-only if true, read-write otherwise (false or unspecified). Defaults to false.
-                                  subPath:
-                                    type: string
-                                    description: Path within the volume from which the container's volume should be mounted. Defaults to "" (volume's root).
-                                  subPathExpr:
-                                    type: string
-                                    description: Expanded path within the volume from which the container's volume should be mounted. Behaves similarly to SubPath but environment variable references $(VAR_NAME) are expanded using the container's environment. Defaults to "" (volume's root). SubPathExpr and SubPath are mutually exclusive.
-                      volumes:
-                        type: array
-                        description: "List of volumes that can be mounted by containers belonging to the pod. More info: https://kubernetes.io/docs/concepts/storage/volumes"
-                        items:
-                          type: object
-                          properties:
-                            name:
-                              type: string
-                              description: "Volume's name. Must be a DNS_LABEL and unique within the pod. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-                            configMap:
-                              type: object
-                              description: ConfigMap represents a configMap that should populate this volume
-                              properties:
-                                defaultMode:
-                                  type: integer
-                                  format: int32
-                                  description: Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON only decimal values. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
-                                items:
-                                  type: array
-                                  description: If unspecified, each key-value pair in the Data field of the referenced ConfigMap will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the volume as files, and any keys not listed will not be present. If a key is specified which is not present in the ConfigMap, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
-                                  items:
-                                    type: object
-                                    properties:
-                                      key:
-                                        type: string
-                                        description: The key to project.
-                                      mode:
-                                        type: integer
-                                        format: int32
-                                        description: Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON only decimal values. Defaults to 0644. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
-                                      path:
-                                        type: string
-                                        description: The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
-                                name:
-                                  type: string
-                                  description: "Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names"
-                                optional:
-                                  type: boolean
-                                  description: Specify whether the ConfigMap or its keys must be defined
-                            secret:
-                              type: object
-                              description: "Secret represents a secret that should populate this volume. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret"
-                              properties:
-                                defaultMode:
-                                  type: integer
-                                  format: int32
-                                  description: Optional: mode bits used to set permissions on created files by default. Must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON only decimal values. Defaults to 0644. Directories within the path are not affected by this setting. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
-                                items:
-                                  type: array
-                                  description: If unspecified, each key-value pair in the Data field of the referenced Secret will be projected into the volume as a file whose name is the key and content is the value. If specified, the listed keys will be projected into the volume as files, and any keys not listed will not be present. If a key is specified which is not present in the Secret, the volume setup will error unless it is marked optional. Paths must be relative and may not contain the '..' path or start with '..'.
-                                  items:
-                                    type: object
-                                    properties:
-                                      key:
-                                        type: string
-                                        description: The key to project.
-                                      mode:
-                                        type: integer
-                                        format: int32
-                                        description: Optional: mode bits used to set permissions on this file, must be an octal value between 0000 and 0777 or a decimal value between 0 and 511. YAML accepts both octal and decimal values, JSON only decimal values. Defaults to 0644. If not specified, the volume defaultMode will be used. This might be in conflict with other options that affect the file mode, like fsGroup, and the result can be other mode bits set.
-                                      path:
-                                        type: string
-                                        description: The relative path of the file to map the key to. May not be an absolute path. May not contain the path element '..'. May not start with the string '..'.
-                                optional:
-                                  type: boolean
-                                  description: Specify whether the Secret or its keys must be defined
-                                secretName:
-                                  type: string
-                                  description: "Name of the secret in the pod's namespace to use. More info: https://kubernetes.io/docs/concepts/storage/volumes#secret"
-              strategy:
-                type: object
-                description: Strategy describes how to replace existing pods with new ones.
-                properties:
-                  canary:
-                    type: object
-                    description: Canary strategy for progressive delivery
-                    properties:
-                      steps:
-                        type: array
-                        description: Steps for canary deployment (5% -> 20% -> 50% -> 100%)
-                        items:
-                          type: object
-                          properties:
-                            setWeight:
-                              type: integer
-                              format: int32
-                              description: Set weight for this step (5, 20, 50, 100)
-                            pause:
-                              type: object
-                              description: Pause configuration
-                              properties:
-                                duration:
-                                  type: string
-                                  description: Duration to pause (default: "60m")
-                      analysis:
-                        type: object
-                        description: Health check analysis configuration
-                        properties:
-                          templates:
-                            type: array
-                            description: List of analysis templates for health checks
-                            items:
-                              type: object
-                              properties:
-                                templateName:
-                                  type: string
-                                  description: Name of the analysis template
-                                args:
-                                  type: array
-                                  description: Arguments to pass to the analysis template
-                                  items:
-                                    type: object
-                                    properties:
-                                      name:
-                                        type: string
-                                        description: Name of the argument
-                                      value:
-                                        type: string
-                                        description: Value of the argument
-              workloadRef:
-                type: object
-                description: WorkloadRef holds a reference to a workload
-                properties:
-                  apiVersion:
-                    type: string
-                    description: API version of the workload
-                  kind:
-                    type: string
-                    description: Kind of the workload
-                  name:
-                    type: string
-                    description: Name of the workload
-              paused:
-                type: boolean
-                description: Paused indicates that the rollout is paused
-              progressDeadlineSeconds:
-                type: integer
-                format: int32
-                description: ProgressDeadlineSeconds The maximum time in seconds for a rollout to make progress before it is considered to be failed. Argo Rollouts will continue to process failed rollouts and a condition with a ProgressDeadlineExceeded reason will be surfaced in the rollout status. Note that progress will not be estimated during the time a rollout is paused. Defaults to 600s.
-              revisionHistoryLimit:
-                type: integer
-                format: int32
-                description: RevisionHistoryLimit The number of old ReplicaSets to retain to allow rollback. This is a pointer to distinguish between explicit zero and not specified. Defaults to 10.
-              rollbackWindow:
-                type: object
-                description: RollbackWindow holds the configuration for rollback window
-                properties:
-                  revisions:
-                    type: integer
-                    format: int32
-                    description: Number of revisions to keep for rollback
-              restartAt:
-                type: string
-                format: date-time
-                description: RestartAt indicates when the rollout should be restarted
-              rollbackWindow:
-                type: object
-                description: RollbackWindow holds the configuration for rollback window
-                properties:
-                  revisions:
-                    type: integer
-                    format: int32
-                    description: Number of revisions to keep for rollback
-          status:
-            type: object
-            properties:
-              observedGeneration:
-                type: string
-                description: ObservedGeneration indicates the .metadata.generation that the controller observed
-              phase:
-                type: string
-                description: Phase indicates the current phase of the rollout
-              message:
-                type: string
-                description: Message provides details on why the rollout is in its current phase
-              replicas:
-                type: integer
-                format: int32
-                description: Total number of non-terminated pods targeted by this rollout (their labels match the selector)
-              updatedReplicas:
-                type: integer
-                format: int32
-                description: Total number of non-terminated pods targeted by this rollout that have the desired template spec
-              readyReplicas:
-                type: integer
-                format: int32
-                description: Total number of ready pods targeted by this rollout
-              availableReplicas:
-                type: integer
-                format: int32
-                description: Total number of available pods (ready for at least minReadySeconds) targeted by this rollout
-              currentPodHash:
-                type: string
-                description: Hash of the current pod template
-              currentStepHash:
-                type: string
-                description: Hash of the current step
-              collisionCount:
-                type: integer
-                format: int32
-                description: Count of hash collisions for the Rollout. The Rollout controller uses this field as a collision avoidance mechanism when it needs to create the name for the newest ReplicaSet
-              conditions:
-                type: array
-                description: Current service state of rollout
-                items:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                replicas:
+                  type: integer
+                  format: int32
+                  description: "Number of desired pods. This is a pointer to distinguish between explicit zero and not specified. Defaults to 1."
+                selector:
                   type: object
+                  description: "Label selector for pods. Existing ReplicaSets whose pods are selected by this will be the ones affected by this rollout."
                   properties:
-                    lastTransitionTime:
-                      type: string
-                      format: date-time
-                      description: Last time the condition transitioned from one status to another
-                    lastUpdateTime:
-                      type: string
-                      format: date-time
-                      description: The last time this condition was updated
-                    message:
-                      type: string
-                      description: A human readable message indicating details about the transition
-                    reason:
-                      type: string
-                      description: The reason for the condition's last transition
-                    status:
-                      type: string
-                      description: Status of the condition, one of True, False, Unknown
-                    type:
-                      type: string
-                      description: Type of rollout condition
-              canary:
-                type: object
-                description: Canary status
-                properties:
-                  currentStepAnalysisRunStatus:
-                    type: object
-                    description: Current step analysis run status
-                    properties:
-                      name:
-                        type: string
-                        description: Name of the analysis run
-                      status:
-                        type: string
-                        description: Status of the analysis run
-                  currentStepIndex:
-                    type: integer
-                    format: int32
-                    description: Current step index
-                  currentStepHash:
-                        type: string
-                        description: Hash of the current step
-                  weights:
-                    type: object
-                    description: Traffic weights
-                    properties:
-                      canary:
+                    matchExpressions:
+                      type: array
+                      description: "matchExpressions is a list of label selector requirements. The requirements are ANDed."
+                      items:
                         type: object
-                        description: Canary weight
                         properties:
-                          weight:
-                            type: integer
-                            format: int32
-                            description: Weight value
-                      stable:
-                        type: object
-                        description: Stable weight
-                        properties:
-                          weight:
-                            type: integer
-                            format: int32
-                            description: Weight value
-              blueGreen:
-                type: object
-                description: BlueGreen status
-                properties:
-                  activeSelector:
-                    type: string
-                    description: Active selector
-                  previewSelector:
-                    type: string
-                    description: Preview selector
-                  scaleUpPreviewCheckPoint:
-                    type: boolean
-                    description: Scale up preview check point
-                  prePromotionAnalysisRunStatus:
-                    type: object
-                    description: Pre-promotion analysis run status
-                    properties:
-                      name:
+                          key:
+                            type: string
+                            description: "key is the label key that the selector applies to."
+                          operator:
+                            type: string
+                            description: "operator represents a key's relationship to a set of values. Valid operators are In, NotIn, Exists and DoesNotExist."
+                          values:
+                            type: array
+                            description: "values is an array of string values. If the operator is In or NotIn, the values array must be non-empty. If the operator is Exists or DoesNotExist, the values array must be empty. This array is replaced during a strategic merge patch."
+                            items:
+                              type: string
+                    matchLabels:
+                      type: object
+                      additionalProperties:
                         type: string
-                        description: Name of the analysis run
-                      status:
-                        type: string
-                        description: Status of the analysis run
-                  postPromotionAnalysisRunStatus:
-                    type: object
-                    description: Post-promotion analysis run status
-                    properties:
-                      name:
-                        type: string
-                        description: Name of the analysis run
-                      status:
-                        type: string
-                        description: Status of the analysis run
-              HPAReplicas:
-                type: integer
-                format: int32
-                description: The number of pods (created by the Rollout) that are currently available
-              selector:
-                type: string
-                description: Selector is the same as the label selector but in the string format to avoid introspection by clients. The string will be in the same format as the query-param syntax. If there is no label selector, it will be empty string
-              stableRS:
-                type: string
-                description: StableRS indicates the replicaset that is currently stable
-              restartRequiredAt:
-                type: string
-                format: date-time
-                description: RestartRequiredAt indicates when the rollout should be restarted
-              promoteFull:
-                type: boolean
-                description: PromoteFull indicates if the rollout should be promoted to full
-              abort:
-                type: boolean
-                description: Abort indicates if the rollout should be aborted
-              currentStepIndex:
-                type: integer
-                format: int32
-                description: CurrentStepIndex indicates the current step index
-              totalEstimatedDuration:
-                type: string
-                description: TotalEstimatedDuration indicates the total estimated duration
-              estimatedRemainingDuration:
-                type: string
-                description: EstimatedRemainingDuration indicates the estimated remaining duration
-    subresources:
-      status: {}
-      scale:
-        specReplicasPath: .spec.replicas
-        statusReplicasPath: .status.replicas
-        labelSelectorPath: .status.selector
+                      description: "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels map is equivalent to an element of matchExpressions, whose key field is \"key\", the operator is \"In\", and the values array contains only \"value\". The requirements are ANDed."
+                template:
+                  type: object
+                  description: "Template describes the pods that will be created."
+                  properties:
+                    metadata:
+                      type: object
+                      description: "Standard object's metadata."
+                      properties:
+                        annotations:
+                          type: object
+                          additionalProperties:
+                            type: string
+                          description: "Annotations is an unstructured key value map stored with a resource that may be set by external tools to store and retrieve arbitrary metadata."
+                        labels:
+                          type: object
+                          additionalProperties:
+                            type: string
+                          description: "Map of string keys and values that can be used to organize and categorize objects."
+                        name:
+                          type: string
+                          description: "Name must be unique within a namespace."
+                        namespace:
+                          type: string
+                          description: "Namespace defines the space within which each name must be unique."
+                    spec:
+                      type: object
+                      description: "Specification of the desired behavior of the pod."
+                      properties:
+                        containers:
+                          type: array
+                          description: "List of containers belonging to the pod."
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: "Name of the container specified as a DNS_LABEL."
+                              image:
+                                type: string
+                                description: "Docker image name."
+                              env:
+                                type: array
+                                description: "List of environment variables to set in the container."
+                                items:
+                                  type: object
+                                  properties:
+                                    name:
+                                      type: string
+                                      description: "Name of the environment variable."
+                                    value:
+                                      type: string
+                                      description: "Value of the environment variable."
+                              resources:
+                                type: object
+                                description: "Compute Resources required by this container."
+                                properties:
+                                  limits:
+                                    type: object
+                                    additionalProperties:
+                                      type: string
+                                    description: "Limits describes the maximum amount of compute resources allowed."
+                                  requests:
+                                    type: object
+                                    additionalProperties:
+                                      type: string
+                                    description: "Requests describes the minimum amount of compute resources required."
+                        volumes:
+                          type: array
+                          description: "List of volumes that can be mounted by containers belonging to the pod."
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                description: "Volume's name. Must be a DNS_LABEL and unique within the pod."
+                              configMap:
+                                type: object
+                                description: "ConfigMap represents a configMap that should populate this volume"
+                                properties:
+                                  name:
+                                    type: string
+                                    description: "Name of the referent."
+                              secret:
+                                type: object
+                                description: "Secret represents a secret that should populate this volume"
+                                properties:
+                                  secretName:
+                                    type: string
+                                    description: "Name of the secret in the pod's namespace to use."
+                strategy:
+                  type: object
+                  description: "Strategy describes how to replace existing pods with new ones."
+                  properties:
+                    canary:
+                      type: object
+                      description: "Canary strategy configuration"
+                      properties:
+                        steps:
+                          type: array
+                          description: "Steps define the order of actions to take"
+                          items:
+                            type: object
+                            properties:
+                              setWeight:
+                                type: integer
+                                format: int32
+                                description: "SetWeight sets what percentage of the new version should receive traffic"
+                              pause:
+                                type: object
+                                description: "Pause configuration"
+                                properties:
+                                  duration:
+                                    type: string
+                                    description: "Duration of the pause"
+                              analysis:
+                                type: object
+                                description: "Analysis configuration"
+                                properties:
+                                  templates:
+                                    type: array
+                                    description: "Analysis templates to use"
+                                    items:
+                                      type: object
+                                      properties:
+                                        templateName:
+                                          type: string
+                                          description: "Name of the analysis template"
+            status:
+              type: object
+              properties:
+                observedGeneration:
+                  type: string
+                  description: "ObservedGeneration indicates the .metadata.generation that the controller observed"
+                phase:
+                  type: string
+                  description: "Phase indicates the current phase of the rollout"
+                message:
+                  type: string
+                  description: "Message provides details on why the rollout is in its current phase"
+                replicas:
+                  type: integer
+                  format: int32
+                  description: "Total number of non-terminated pods targeted by this rollout"
+                readyReplicas:
+                  type: integer
+                  format: int32
+                  description: "Total number of ready pods targeted by this rollout"
+                availableReplicas:
+                  type: integer
+                  format: int32
+                  description: "Total number of available pods targeted by this rollout"
+                updatedReplicas:
+                  type: integer
+                  format: int32
+                  description: "Total number of non-terminated pods targeted by this rollout that have the desired template spec"
+                selector:
+                  type: string
+                  description: "Selector is a label query over pods that should match the replica count"
