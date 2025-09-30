@@ -11,14 +11,11 @@ spec:
     name: "router-config"
     version: "v1.0.0"
     data:
-      interfaces:
-        - name: "eth0"
-          ip: "192.168.1.1/24"
-          status: "up"
-      routing:
-        - destination: "0.0.0.0/0"
-          gateway: "192.168.1.254"
-          interface: "eth0"
+      interface_name: "eth0"
+      interface_ip: "192.168.1.1/24"
+      interface_status: "up"
+      route_destination: "0.0.0.0/0"
+      route_gateway: "192.168.1.254"
   targetDevices:
     - "router-001"
     - "router-002"
