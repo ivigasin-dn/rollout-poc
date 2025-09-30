@@ -14,7 +14,6 @@ spec:
     singular: analysistemplate
     shortNames:
       - at
-      - analysistemplates
   scope: Namespaced
   versions:
     - name: v1alpha1
@@ -27,152 +26,26 @@ spec:
             spec:
               type: object
               required:
-                - metrics
+                - validationUrl
               properties:
-                metrics:
-                  type: array
-                  description: "Metrics to evaluate during analysis"
-                  items:
-                    type: object
-                    required:
-                      - name
-                      - successCondition
-                    properties:
-                      name:
-                        type: string
-                        description: "Name of the metric"
-                      interval:
-                        type: string
-                        description: "Interval between evaluations"
-                        default: "30s"
-                      count:
-                        type: integer
-                        format: int32
-                        description: "Number of evaluations to perform"
-                        default: 3
-                      successCondition:
-                        type: string
-                        description: "Condition for successful metric evaluation"
-                      failureCondition:
-                        type: string
-                        description: "Condition for failed metric evaluation"
-                      provider:
-                        type: object
-                        description: "Provider configuration for the metric"
-                        properties:
-                          webhook:
-                            type: object
-                            description: "Webhook provider"
-                            properties:
-                              url:
-                                type: string
-                                description: "Webhook URL"
-                              method:
-                                type: string
-                                enum: ["GET", "POST"]
-                                default: "POST"
-                              headers:
-                                type: array
-                                description: "HTTP headers"
-                                items:
-                                  type: object
-                                  properties:
-                                    name:
-                                      type: string
-                                    value:
-                                      type: string
-                              body:
-                                type: string
-                                description: "Request body template"
-                              timeout:
-                                type: string
-                                description: "Request timeout"
-                                default: "30s"
-                          prometheus:
-                            type: object
-                            description: "Prometheus provider"
-                            properties:
-                              address:
-                                type: string
-                                description: "Prometheus server address"
-                              query:
-                                type: string
-                                description: "Prometheus query"
-                              timeout:
-                                type: string
-                                description: "Query timeout"
-                                default: "30s"
-                args:
-                  type: array
-                  description: "Arguments that can be passed to the analysis template"
-                  items:
-                    type: object
-                    properties:
-                      name:
-                        type: string
-                        description: "Name of the argument"
-                      value:
-                        type: string
-                        description: "Default value for the argument"
-                      valueFrom:
-                        type: object
-                        description: "Source for the argument value"
-                        properties:
-                          fieldRef:
-                            type: object
-                            properties:
-                              fieldPath:
-                                type: string
-                          secretKeyRef:
-                            type: object
-                            properties:
-                              name:
-                                type: string
-                              key:
-                                type: string
-                          configMapKeyRef:
-                            type: object
-                            properties:
-                              name:
-                                type: string
-                              key:
-                                type: string
-                dryRun:
-                  type: array
-                  description: "Dry run configuration"
-                  items:
-                    type: object
-                    properties:
-                      metricName:
-                        type: string
-                        description: "Name of the metric to dry run"
-                      value:
-                        type: string
-                        description: "Value to use for dry run"
-                measurementRetention:
-                  type: array
-                  description: "Measurement retention configuration"
-                  items:
-                    type: object
-                    properties:
-                      metricName:
-                        type: string
-                        description: "Name of the metric"
-                      limit:
-                        type: integer
-                        format: int32
-                        description: "Number of measurements to retain"
+                validationUrl:
+                  type: string
+                  description: "URL for validation webhook"
+                timeout:
+                  type: string
+                  description: "Validation timeout"
+                  default: "30s"
+                successCondition:
+                  type: string
+                  description: "Condition for success"
+                  default: "result.status == 'success'"
             status:
               type: object
               properties:
                 phase:
                   type: string
-                  enum: ["Pending", "Running", "Successful", "Failed", "Error"]
-                  description: "Current phase of the analysis template"
+                  enum: ["Pending", "Running", "Successful", "Failed"]
+                  description: "Current phase"
                 message:
                   type: string
-                  description: "Human-readable message about the current status"
-                lastTransitionTime:
-                  type: string
-                  format: date-time
-                  description: "Last time the status changed"
+                  description: "Status message"

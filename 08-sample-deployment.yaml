@@ -1,180 +1,42 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: sample-app-v1
-  namespace: rollout-apps
+  name: rollout-controller
+  namespace: rollout-system
   labels:
-    app: sample-app
-    version: v1
-    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/name: rollout-controller
     app.kubernetes.io/part-of: rollout-poc
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: sample-app
-      version: v1
+      app.kubernetes.io/name: rollout-controller
   template:
     metadata:
       labels:
-        app: sample-app
-        version: v1
+        app.kubernetes.io/name: rollout-controller
     spec:
       containers:
-      - name: sample-app
-        image: nginx:1.20
+      - name: controller
+        image: rollout-controller:latest
         ports:
-        - containerPort: 80
+        - containerPort: 8080
         env:
-        - name: APP_VERSION
-          value: "v1"
-        - name: CONFIG_VERSION
-          value: "v1.0.0"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: NAMESPACE
+          value: "rollout-system"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: sample-app-service
-  namespace: rollout-apps
+  name: rollout-webhook
+  namespace: rollout-system
   labels:
-    app: sample-app
-    app.kubernetes.io/name: sample-app
+    app.kubernetes.io/name: rollout-webhook
     app.kubernetes.io/part-of: rollout-poc
 spec:
   selector:
-    app: sample-app
+    app.kubernetes.io/name: rollout-controller
   ports:
-    - port: 80
-      targetPort: 80
-      name: http
-  type: ClusterIP
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: sample-app-v2
-  namespace: rollout-apps
-  labels:
-    app: sample-app
-    version: v2
-    app.kubernetes.io/name: sample-app
-    app.kubernetes.io/part-of: rollout-poc
-spec:
-  replicas: 0
-  selector:
-    matchLabels:
-      app: sample-app
-      version: v2
-  template:
-    metadata:
-      labels:
-        app: sample-app
-        version: v2
-    spec:
-      containers:
-      - name: sample-app
-        image: nginx:1.21
-        ports:
-        - containerPort: 80
-        env:
-        - name: APP_VERSION
-          value: "v2"
-        - name: CONFIG_VERSION
-          value: "v2.1.0"
-        resources:
-          requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
-            memory: "128Mi"
-            cpu: "100m"
-        livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 5
-          periodSeconds: 5
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sample-app-config-v1
-  namespace: rollout-apps
-  labels:
-    app: sample-app
-    version: v1
-    app.kubernetes.io/name: sample-app
-    app.kubernetes.io/part-of: rollout-poc
-data:
-  config.yaml: |
-    app:
-      name: "Sample Application"
-      version: "v1.0.0"
-      debug: false
-    server:
-      port: 80
-      host: "0.0.0.0"
-    database:
-      host: "localhost"
-      port: 5432
-      name: "sample_db"
-    features:
-      - "feature-a"
-      - "feature-b"
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: sample-app-config-v2
-  namespace: rollout-apps
-  labels:
-    app: sample-app
-    version: v2
-    app.kubernetes.io/name: sample-app
-    app.kubernetes.io/part-of: rollout-poc
-data:
-  config.yaml: |
-    app:
-      name: "Sample Application"
-      version: "v2.1.0"
-      debug: false
-    server:
-      port: 80
-      host: "0.0.0.0"
-    database:
-      host: "localhost"
-      port: 5432
-      name: "sample_db"
-    features:
-      - "feature-a"
-      - "feature-b"
-      - "feature-c"
-      - "feature-d"
-    new_features:
-      - "enhanced-logging"
-      - "metrics-collection"
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP

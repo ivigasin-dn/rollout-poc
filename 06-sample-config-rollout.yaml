@@ -1,183 +1,32 @@
 apiVersion: rollout.io/v1alpha1
 kind: ConfigRollout
 metadata:
-  name: network-config-rollout
+  name: simple-config-rollout
   namespace: rollout-apps
   labels:
     app.kubernetes.io/name: config-rollout
     app.kubernetes.io/part-of: rollout-poc
 spec:
-  configTemplate:
-    name: "network-router-config"
-    version: "v2.1.0"
-    configData:
+  config:
+    name: "router-config"
+    version: "v1.0.0"
+    data:
       interfaces:
         - name: "eth0"
           ip: "192.168.1.1/24"
-          status: "up"
-        - name: "eth1"
-          ip: "10.0.0.1/24"
           status: "up"
       routing:
         - destination: "0.0.0.0/0"
           gateway: "192.168.1.254"
           interface: "eth0"
-      services:
-        - name: "ssh"
-          port: 22
-          enabled: true
-        - name: "snmp"
-          port: 161
-          enabled: true
-  rolloutStrategy:
-    type: "canary"
-    canary:
-      steps:
-      - setWeight: 10
-        pause:
-          duration: 30s
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v2.1.0"
-            - name: deviceId
-              value: "router-canary-001"
-      - setWeight: 25
-        pause:
-          duration: 60s
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v2.1.0"
-            - name: deviceId
-              value: "router-canary-002"
-          - templateName: performance-validation-template
-      - setWeight: 50
-        pause:
-          duration: 120s
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v2.1.0"
-            - name: deviceId
-              value: "router-canary-003"
-          - templateName: performance-validation-template
-      - setWeight: 100
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v2.1.0"
-            - name: deviceId
-              value: "router-production"
-          - templateName: performance-validation-template
   targetDevices:
-    selector:
-      matchLabels:
-        device-type: "router"
-        environment: "production"
-    deviceList:
-      - "router-001"
-      - "router-002"
-      - "router-003"
-      - "router-004"
-      - "router-005"
-  webhook:
-    url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/validate"
-    secret: "webhook-secret"
-    timeout: "30s"
----
-apiVersion: rollout.io/v1alpha1
-kind: ConfigRollout
-metadata:
-  name: firewall-config-rollout
-  namespace: rollout-apps
-  labels:
-    app.kubernetes.io/name: config-rollout
-    app.kubernetes.io/part-of: rollout-poc
-spec:
-  configTemplate:
-    name: "firewall-security-config"
-    version: "v1.5.0"
-    configData:
-      rules:
-        - name: "allow-ssh"
-          action: "allow"
-          protocol: "tcp"
-          port: 22
-          source: "192.168.0.0/16"
-        - name: "allow-http"
-          action: "allow"
-          protocol: "tcp"
-          port: 80
-          source: "0.0.0.0/0"
-        - name: "allow-https"
-          action: "allow"
-          protocol: "tcp"
-          port: 443
-          source: "0.0.0.0/0"
-        - name: "deny-all"
-          action: "deny"
-          protocol: "all"
-          source: "0.0.0.0/0"
-      policies:
-        - name: "default-deny"
-          action: "deny"
-          log: true
-  rolloutStrategy:
-    type: "canary"
-    canary:
-      steps:
-      - setWeight: 5
-        pause:
-          duration: 60s
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v1.5.0"
-            - name: deviceId
-              value: "firewall-canary-001"
-      - setWeight: 20
-        pause:
-          duration: 120s
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v1.5.0"
-            - name: deviceId
-              value: "firewall-canary-002"
-          - templateName: performance-validation-template
-      - setWeight: 100
-        analysis:
-          templates:
-          - templateName: config-validation-template
-            args:
-            - name: configVersion
-              value: "v1.5.0"
-            - name: deviceId
-              value: "firewall-production"
-          - templateName: performance-validation-template
-  targetDevices:
-    selector:
-      matchLabels:
-        device-type: "firewall"
-        environment: "production"
-    deviceList:
-      - "firewall-001"
-      - "firewall-002"
-      - "firewall-003"
-  webhook:
-    url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/validate"
-    secret: "webhook-secret"
-    timeout: "30s"
+    - "router-001"
+    - "router-002"
+    - "router-003"
+  rolloutSteps:
+    - percentage: 25
+      pauseDuration: "30s"
+    - percentage: 50
+      pauseDuration: "60s"
+    - percentage: 100
+      pauseDuration: "0s"

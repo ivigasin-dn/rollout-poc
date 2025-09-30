@@ -1,87 +1,12 @@
 apiVersion: rollout.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: config-validation-template
+  name: basic-validation-template
   namespace: rollout-system
   labels:
     app.kubernetes.io/name: analysis-template
     app.kubernetes.io/part-of: rollout-poc
 spec:
-  metrics:
-  - name: config-validation
-    interval: 30s
-    count: 3
-    successCondition: result.status == "success"
-    failureCondition: result.status == "failure"
-    provider:
-      webhook:
-        url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/validate"
-        method: "POST"
-        headers:
-        - name: "Content-Type"
-          value: "application/json"
-        body: |
-          {
-            "configVersion": "{{.args.configVersion}}",
-            "deviceId": "{{.args.deviceId}}",
-            "timestamp": "{{.args.timestamp}}"
-          }
-        timeout: 30s
-  - name: system-health
-    interval: 30s
-    count: 2
-    successCondition: result.cpu_usage < 80 && result.memory_usage < 85
-    failureCondition: result.cpu_usage > 90 || result.memory_usage > 95
-    provider:
-      webhook:
-        url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/metrics"
-        method: "GET"
-        timeout: 30s
-  args:
-  - name: configVersion
-    value: "v1.0.0"
-  - name: deviceId
-    value: "device-001"
-  - name: timestamp
-    value: "2024-01-01T00:00:00Z"
----
-apiVersion: rollout.io/v1alpha1
-kind: AnalysisTemplate
-metadata:
-  name: performance-validation-template
-  namespace: rollout-system
-  labels:
-    app.kubernetes.io/name: analysis-template
-    app.kubernetes.io/part-of: rollout-poc
-spec:
-  metrics:
-  - name: response-time
-    interval: 15s
-    count: 5
-    successCondition: result.response_time < 300
-    failureCondition: result.response_time > 500
-    provider:
-      webhook:
-        url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/metrics"
-        method: "GET"
-        timeout: 30s
-  - name: error-rate
-    interval: 30s
-    count: 3
-    successCondition: result.error_rate < 1
-    failureCondition: result.error_rate > 5
-    provider:
-      webhook:
-        url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/metrics"
-        method: "GET"
-        timeout: 30s
-  - name: throughput
-    interval: 30s
-    count: 3
-    successCondition: result.throughput > 2000
-    failureCondition: result.throughput < 1000
-    provider:
-      webhook:
-        url: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/metrics"
-        method: "GET"
-        timeout: 30s
+  validationUrl: "http://rollout-webhook.rollout-system.svc.cluster.local:8080/validate"
+  timeout: "30s"
+  successCondition: "result.status == 'success'"
