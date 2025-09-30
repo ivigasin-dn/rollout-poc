@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rollout-system
+  labels:
+    app.kubernetes.io/name: rollout-system
+    app.kubernetes.io/part-of: rollout-poc
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rollout-apps
+  labels:
+    app.kubernetes.io/name: rollout-apps
+    app.kubernetes.io/part-of: rollout-poc

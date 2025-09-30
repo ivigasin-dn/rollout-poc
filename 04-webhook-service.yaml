@@ -1,0 +1,175 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rollout-webhook
+  namespace: rollout-system
+  labels:
+    app.kubernetes.io/name: rollout-webhook
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  selector:
+    app: rollout-webhook
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rollout-webhook
+  namespace: rollout-system
+  labels:
+    app.kubernetes.io/name: rollout-webhook
+    app.kubernetes.io/part-of: rollout-poc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rollout-webhook
+  template:
+    metadata:
+      labels:
+        app: rollout-webhook
+    spec:
+      containers:
+      - name: webhook
+        image: nginx:alpine
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: webhook-config
+          mountPath: /etc/nginx/conf.d
+        - name: webhook-scripts
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: webhook-config
+        configMap:
+          name: webhook-nginx-config
+      - name: webhook-scripts
+        configMap:
+          name: webhook-scripts
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-nginx-config
+  namespace: rollout-system
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name localhost;
+        
+        location /health {
+            return 200 '{"status":"healthy"}';
+            add_header Content-Type application/json;
+        }
+        
+        location /validate {
+            proxy_pass http://localhost:8081;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        
+        location /metrics {
+            proxy_pass http://localhost:8081;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: webhook-scripts
+  namespace: rollout-system
+data:
+  webhook-server.py: |
+    #!/usr/bin/env python3
+    import json
+    import time
+    import random
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+    from urllib.parse import urlparse, parse_qs
+    import threading
+    
+    class WebhookHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            if self.path == '/health':
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({"status": "healthy"}).encode())
+            elif self.path == '/metrics':
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                # Simulate metrics collection
+                metrics = {
+                    "cpu_usage": random.uniform(10, 80),
+                    "memory_usage": random.uniform(20, 90),
+                    "response_time": random.uniform(100, 500),
+                    "error_rate": random.uniform(0, 5),
+                    "throughput": random.uniform(1000, 5000)
+                }
+                self.wfile.write(json.dumps(metrics).encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+        
+        def do_POST(self):
+            if self.path == '/validate':
+                content_length = int(self.headers['Content-Length'])
+                post_data = self.rfile.read(content_length)
+                
+                try:
+                    data = json.loads(post_data.decode('utf-8'))
+                    # Simulate validation logic
+                    success = self.validate_config(data)
+                    
+                    if success:
+                        self.send_response(200)
+                        response = {"status": "success", "message": "Configuration validation passed"}
+                    else:
+                        self.send_response(400)
+                        response = {"status": "failure", "message": "Configuration validation failed"}
+                    
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps(response).encode())
+                    
+                except Exception as e:
+                    self.send_response(500)
+                    self.send_header('Content-type', 'application/json')
+                    self.end_headers()
+                    response = {"status": "error", "message": str(e)}
+                    self.wfile.write(json.dumps(response).encode())
+            else:
+                self.send_response(404)
+                self.end_headers()
+        
+        def validate_config(self, data):
+            # Simulate validation logic
+            # In a real implementation, this would validate the actual configuration
+            time.sleep(1)  # Simulate processing time
+            
+            # Randomly pass/fail for demo purposes (90% success rate)
+            return random.random() < 0.9
+        
+        def log_message(self, format, *args):
+            # Suppress default logging
+            pass
+    
+    def run_server():
+        server = HTTPServer(('0.0.0.0', 8081), WebhookHandler)
+        print("Webhook server running on port 8081")
+        server.serve_forever()
+    
+    if __name__ == '__main__':
+        run_server()
