@@ -18,7 +18,8 @@ spec:
     spec:
       containers:
       - name: controller
-        image: rollout-controller:latest
+        image: golang:alpine
+        command: ["sleep", "infinity"]
         ports:
         - containerPort: 8080
         env:
